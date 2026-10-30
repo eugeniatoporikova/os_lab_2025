@@ -1,0 +1,6 @@
+*.o
+*.a
+/parallel_min_max
+/process_memory
+/zombie
+/psum
