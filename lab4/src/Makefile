@@ -1,32 +1,30 @@
 CC = gcc
-CFLAGS = -std=c11 -Wall -Wextra -O2
-AR = ar
+CFLAGS = -Wall -pthread
 
-.PHONY: all clean
 all: parallel_min_max process_memory zombie psum
 
 parallel_min_max: parallel_min_max.o utils.o find_min_max.o
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $^ -o $@
 
 process_memory: process_memory.o
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $^ -o $@
 
 zombie: zombie.o
-	$(CC) $(CFLAGS) $^ -o $@
+	$(CC) $^ -o $@
 
-libsum.a: sum.o
-	$(AR) rcs $@ $^
+psum: parallel_sum.o sum.o utils.o
+	$(CC) $^ -o $@
 
-psum: parallel_sum.o utils.o libsum.a
-	$(CC) $(CFLAGS) parallel_sum.o utils.o -L. -lsum -pthread -o $@
+# --- Зависимости объектных файлов ---
+# (Make сам применит правило: gcc $(CFLAGS) -c файл.c -o файл.o)
+parallel_min_max.o: find_min_max.h utils.h
+utils.o: utils.h
+find_min_max.o: find_min_max.h utils.h
+process_memory.o:
+zombie.o:
+sum.o: sum.h
+parallel_sum.o: sum.h utils.h
 
-parallel_sum.o: parallel_sum.c sum.h utils.h
-	$(CC) $(CFLAGS) -pthread -c $< -o $@
-
-sum.o: sum.c sum.h
-utils.o: utils.c utils.h
-find_min_max.o: find_min_max.c find_min_max.h
-parallel_min_max.o: parallel_min_max.c find_min_max.h utils.h
-
+# --- Очистка ---
 clean:
-	rm -f *.o *.a parallel_min_max process_memory zombie psum
+	rm -f *.o parallel_min_max process_memory zombie psum
